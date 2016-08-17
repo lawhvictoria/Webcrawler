@@ -21,11 +21,8 @@ public class webcrawler {
 		String website = "www.nasa.gov";
 		ArrayList<String> uriList = new ArrayList<String>();
 		uriList = getLinks(website);
-//		printList(uriList);
+		printList(uriList);
 		readRobot(website);
-		
-		
-		
 	}
 	
 	public static ArrayList<String> getLinks (String website){
@@ -94,11 +91,8 @@ public class webcrawler {
 					System.out.println("No Match");
 					}
 				}
-				
 			}
-			
 		}
-		
 		catch(IOException e){
 			e.printStackTrace();
 		}

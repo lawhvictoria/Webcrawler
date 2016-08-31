@@ -39,15 +39,11 @@ public class webcrawler {
 			visitedLinks.put("http://" + website, "visiting");
 			//Selects anything that has a tag "<a> </a>", and stores it in the object links with the <a> tag.  
 			Elements links = doc.body().select("a");
-			
-//			System.out.println(links.toString());
 
 			//For each link stored in "links", we want to grab the href attribute value
 			for (Element link : links) {
 //				System.out.println(link.attr("href"));
-				
 				String normalizedURI;
-				
 				if(link.attr("href").startsWith("#") || link.attr("href").contains("mailto:") || link.attr("href").length() < 1){
 					;
 				}
@@ -93,7 +89,6 @@ public class webcrawler {
 	//this function reads the robots.txt file and determines whether the link is allowed or disallowed
 	public static Map<String, String> readRobot(String website){
 		Map allowDisallowMap = new HashMap();
-
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(new URL("http://" + website + "/robots.txt").openStream()))){
 			String line = null;
 			
@@ -105,8 +100,6 @@ public class webcrawler {
 						
 			//Looks through Robots.txt until end of file
 			while((line = in.readLine()) != null){
-//				System.out.println(line);
-				
 				//If line contains disallow, Matcher matches each line against the pattern
 				if(line.startsWith("Disallow")){
 					Matcher m = r.matcher(line);
@@ -123,7 +116,6 @@ public class webcrawler {
 				}
 			}
 		}
-		
 		catch(IOException e){
 			e.printStackTrace();
 		}
@@ -182,5 +174,4 @@ public class webcrawler {
 		}
 		return visitedLinks;
 	}
-	
 }

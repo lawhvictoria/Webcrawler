@@ -17,23 +17,26 @@ import java.util.regex.Pattern;
 public class webcrawler {
 
 	public static void main(String[] args) {
-		String website = "www.cnn.com";
+		String website = "www.discovery.com";
+		Map visitedLinks = new HashMap();
 		ArrayList<String> uriList = new ArrayList<String>();
 		Map<String, String> allowDisallowMap = readRobot(website);
-		uriList = getLinks(website, allowDisallowMap);
-		printList(uriList);
+		uriList = getLinks(website, allowDisallowMap, visitedLinks);
+//		printList(uriList);
 //		System.out.println(allowDisallowMap);
 //		printMap(allowDisallowMap);
+		visitUriList(visitedLinks, uriList);
+		printMap(visitedLinks);
 	}
 	
 	//this function generates a list of URLs that we are allow to visit. 
-	public static ArrayList<String> getLinks (String website, Map<String, String> allowDisallowMap){
+	public static ArrayList<String> getLinks (String website, Map<String, String> allowDisallowMap, Map<String, String> visitedLinks){
 		ArrayList<String> uriList = new ArrayList<String>();
 		
 		try{
 			//Opens up the connection to the link
-			Document doc = Jsoup.connect("http://" + website).get(); 
-			
+			Document doc = Jsoup.connect("http://" + website).timeout(0).ignoreContentType(true).ignoreHttpErrors(true).get();
+			visitedLinks.put("http://" + website, "visiting");
 			//Selects anything that has a tag "<a> </a>", and stores it in the object links with the <a> tag.  
 			Elements links = doc.body().select("a");
 			
@@ -45,19 +48,23 @@ public class webcrawler {
 				
 				String normalizedURI;
 				
-				//converts the attribute value into a String and checks if it starts with a "/"
-				if(link.attr("href").startsWith("/") && !(link.attr("href").contains("//"))) {
-					normalizedURI = "http://" + website + link.attr("href");
+				if(link.attr("href").startsWith("#") || link.attr("href").contains("mailto:") || link.attr("href").length() < 1){
+					;
 				}
-				else if (link.attr("href").contains("//") && !(link.attr("href").contains("http:")) && !(link.attr("href").contains("https:"))) {
-					normalizedURI = "http:" + link.attr("href");
-				}
-				
 				else {
-					normalizedURI = link.attr("href");
-				}
-				if(checkAllowDisallow(normalizedURI, allowDisallowMap)){
-					uriList.add(normalizedURI);
+					//converts the attribute value into a String and checks if it starts with a "/"
+					if(link.attr("href").startsWith("/") && !(link.attr("href").contains("//"))) {
+						normalizedURI = "http://" + website + link.attr("href");
+					}
+					else if (link.attr("href").contains("//") && !(link.attr("href").contains("http:")) && !(link.attr("href").contains("https:"))) {
+						normalizedURI = "http:" + link.attr("href");
+					}
+					else {
+						normalizedURI = link.attr("href");
+					}
+					if(checkAllowDisallow(normalizedURI, allowDisallowMap)){
+						uriList.add(normalizedURI);
+					}
 				}
 			}
 		}
@@ -141,6 +148,39 @@ public class webcrawler {
 				return checkAllowDisallow(parent, allowDisallowMap);
 			}
 		}
+	}
+	
+	//This function goes through each of the links in the arraylist.
+	public static Map<String, String> visitUriList (Map<String, String> visitedLinks, ArrayList<String> uriList){
+		for(String link: uriList){
+			openLink(visitedLinks, link);
+		}
+		return visitedLinks;
+	}
+	
+	//This function checks if the link in the arraylist has already been visited.
+	public static Map<String, String> openLink (Map<String, String> visitedLinks, String link){
+		if(visitedLinks.containsKey(link)){
+			return visitedLinks;
+		}
+		else{
+			markAsVisited(visitedLinks, link);
+		}
+		return visitedLinks;
+	}
+	
+	//This function visits all the unvisited links and marks the link as visited.
+	public static Map<String, String> markAsVisited(Map<String, String> visitedLinks, String link){
+		visitedLinks.put(link, "visiting");
+		System.out.println("Visiting " + link);
+		try{
+			Jsoup.connect(link).timeout(0).ignoreContentType(true).ignoreHttpErrors(true).get(); 
+			visitedLinks.put(link, "visited");
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return visitedLinks;
 	}
 	
 }
